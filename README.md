@@ -1,5 +1,7 @@
 # Asteroids
 
+Homework assignment for fall semester 2022
+
 Original code came from FamTrinli  
 https://www.youtube.com/watch?v=rWaSo2usU4A  
 Published on Apr 29, 2016  
