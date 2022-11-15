@@ -713,6 +713,25 @@ void CreateAsteroids(std::list<Entity*> &entities, Animation &anim)
     }
 }
 
+/*
+ * Function: ClearAsteroids
+ * Inputs: std::list<Entity*>(1)
+ * Outputs: None
+ */
+void ClearAsteroids(std::list<Entity*> &entities)
+{
+    // clear all asteroids
+    for (auto entity : entities)
+    {
+        // if entity is asteroid
+        if (entity->name == "asteroid")
+        {
+            // destroy entity
+            entity->life = 0;
+        }
+    }
+}
+
 //=======================================
 /*
  * Function: main (driver code)
@@ -931,8 +950,8 @@ int main()
 
                             // loop twice (or more if on higher level)
                             for (int i = 0; i < 1+Game::level; i++) {
-                                // if size of a is 15 (if a is small asteroid)
-                                if (a->R == 15) {
+                                // if size of a is 15 (if a is small asteroid) or if ufo
+                                if (a->R == 15 || a->name == "ufo") {
                                     // do nothing
                                     continue;
                                 }
@@ -1132,7 +1151,7 @@ int main()
             if (win)
             {
                 endtxt =
-                        " LEVEL COMPLETE\n"
+                        "LEVEL COMPLETE\n"
                         "Final Score: " +std::to_string(Game::currentScore)+"\n"
                                                                             "High Score : "+std::to_string(Game::highScore)+"\n";
 
@@ -1192,8 +1211,9 @@ int main()
                         player::lives = MAX_LIVES;
                         Game::currentScore = 0;
                         Game::level = 1;
-                        Game::round = 1;
                         newLevel = true;
+                        Game::round = 1;
+                        ClearAsteroids(entities);
                     }
 
                         // check if click is within the bounds of next level button
@@ -1207,9 +1227,10 @@ int main()
                         play = true;
                         Game::level += 1;
                         player::lives = MAX_LIVES;
-                        newLevel = true;
                         Game::rounds += 1;
+                        newLevel = true;
                         Game::round = 1;
+                        ClearAsteroids(entities);
                     }
                 }
             }
