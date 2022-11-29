@@ -1370,6 +1370,7 @@ int main()
                         newLevel = true;
                         Game::round = 1;
                         ClearAsteroids(entities);
+                        time = 0;
                     }
 
                         // check if click is within the bounds of next level button
@@ -1387,6 +1388,7 @@ int main()
                         newLevel = true;
                         Game::round = 1;
                         ClearAsteroids(entities);
+                        time = 0;
                     }
                 }
             }
