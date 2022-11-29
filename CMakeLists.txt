@@ -16,6 +16,8 @@ configure_file(fonts/Softers.otf fonts/Softers.otf COPYONLY)
 configure_file(sounds/alienSound.ogg sounds/alienSound.ogg COPYONLY)
 configure_file(sounds/gunshot.ogg sounds/gunshot.ogg COPYONLY)
 configure_file(sounds/explosion.ogg sounds/explosion.ogg COPYONLY)
+configure_file(images/heart.png images/heart.png COPYONLY)
+
 #file(COPY images DESTINATION images)
 
 # Define sources and executable
