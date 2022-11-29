@@ -25,8 +25,8 @@
 //=======================================
 using namespace sf;
 
-// max lives for player
-const int MAX_LIVES = 5;
+// start lives for player
+const int START_LIVES = 5;
 
 // Window size
 const int W = 1200;
@@ -353,7 +353,7 @@ public:
 
     /*
      * Function: Constructor
-     * Inputs: None
+     * Inputs: optional bool (1)
      * Outputs: None
      */
     Ufo()
@@ -457,6 +457,122 @@ private:
     int startSide;
 
 };
+
+//=======================================
+// Heart class (inherits from Entity class)
+//=======================================
+class Heart : public Entity
+{
+public:
+
+    /*
+     * Function: Constructor
+     * Inputs: None
+     * Outputs: None
+     */
+    Heart()
+    {
+        // set name to heart
+        name = "heart";
+    }
+
+    /*
+     * Function: Heart::settings (overrides Entity::settings)
+     * Inputs: int (2) location of heart,
+     */
+    void settings(Texture &t)
+    {
+        heartTex = t;
+        R = 20;
+        angle = 0;
+
+        // generate random number, if greater than RAND_MAX, randN is set to 1, else 0
+        // source: https://stackoverflow.com/questions/23725511/random-number-picker-between-2-numbers
+        int randN = (rand() > RAND_MAX/2) ? 1 : 0;
+
+        // if randN is 0
+        if (randN == 0)
+        {
+            // set x position to left side of screen
+            x = 0;
+            startSide = 0;
+        }
+            // if randN is 1
+        else
+        {
+            // set x position to right side of screen
+            x = W;
+            startSide = 1;
+        }
+
+        // set y to a random height between 0 and height of screen
+        y = rand()%H;
+
+        // make sure we can see ufo (not off top or bottom)
+        if (y <= 15)
+        {
+            y+=15;
+        }
+        if (H-y<=15)
+        {
+            y-=15;
+        }
+    }
+
+    /*
+     * Function: Heart::update (overrides Entity::update)
+     * Inputs: None
+     * Outputs: None
+     */
+    void update()
+    {
+        // constant horizontal speed
+        dx = 5;
+        // no vertical speed
+        dy = 0;
+
+        // update position
+        if (startSide == 0)
+        {
+            x+=dx;
+        }
+        else
+        {
+            x-=dx;
+        }
+        // if ufo goes off the right side of screen or off the left side of screen
+        if (x > W || x < 0)
+        {
+            life = 0;
+        }
+    }
+
+    /*
+     * Function: Heart::draw (overrides Entity::draw)
+     * Inputs: RenderWindow object
+     * Outputs: None
+     */
+    void draw(RenderWindow &app)
+    {
+        // create ufo sprite
+        Sprite heartObj;
+        heartObj.setPosition(x,y);
+        heartObj.setRotation(angle);
+        heartObj.setTexture(heartTex);
+        // scale the ufo down
+        heartObj.setScale(0.1, 0.1);
+        // draw the sprite
+        app.draw(heartObj);
+    }
+
+private:
+    Texture heartTex;
+    Sprite sprite;
+    int startSide;
+
+};
+
+
 //=======================================
 // Game class
 //=======================================
@@ -477,6 +593,12 @@ public:
 
     // stores rounds per level
     static int rounds;
+
+    // stores true/false if sent heart this round
+    static bool sentHeart;
+
+    // stores number of ufo in game
+    static int NumUfos;
 };
 
 // initialize currentScore to 0
@@ -493,6 +615,12 @@ int Game::round = 1;
 
 // initializing rounds to 2
 int Game::rounds = 2;
+
+// initializing sentHeart to false
+bool Game::sentHeart = false;
+
+// initialize number of ufos to 0
+int Game::NumUfos = 0;
 
 //=======================================
 // player class (inherits from Entity class)
@@ -583,8 +711,8 @@ public:
 
 };
 
-// initialize lives to max lives
-int player::lives = MAX_LIVES;
+// initialize lives to start lives
+int player::lives = START_LIVES;
 
 //=======================================
 // button class (inherits from Entity
@@ -755,7 +883,7 @@ int main()
     app.setFramerateLimit(60);
 
     // load in textures for sprites
-    Texture t1,t2,t3,t4,t5,t6,t7,t8;
+    Texture t1,t2,t3,t4,t5,t6,t7,t8,t9;
     t1.loadFromFile("images/spaceship.png");
     t2.loadFromFile("images/background.jpg");
     t3.loadFromFile("images/explosions/type_C.png");
@@ -769,6 +897,10 @@ int main()
     // Alien icons created by Freepik - Flaticon
     t8.loadFromFile("images/ufo.png");
 
+    // Heart texture:
+    // "https://www.flaticon.com/free-icons/pixel"
+    // Pixel icons created by Futuer - Flaticon"
+    t9.loadFromFile("images/heart.png");
 
     // UFO Sound:
     // "Alien Alarm Broadcast" by Airborne80
@@ -914,8 +1046,8 @@ int main()
             for (auto a: entities) {
                 // iterating through each entity with respect to entity a
                 for (auto b: entities) {
-                    // if a is asteroid or ufo and b is a bullet
-                    if ((a->name == "asteroid" || a->name == "ufo") && b->name == "bullet") {
+                    // if a is asteroid, ufo, or heart, and b is a bullet
+                    if ((a->name == "asteroid" || a->name == "ufo" || a->name == "heart") && b->name == "bullet") {
 
                         // check for collision between a and b
                         if (isCollide(a, b)) {
@@ -926,6 +1058,11 @@ int main()
 
                                 // stop ufo sound
                                 alienSound.stop();
+                                Game::NumUfos -= 1;
+                            }
+                            else if (a->name == "heart")
+                            {
+                                player::lives += 1;
                             }
                             else
                             {
@@ -978,6 +1115,7 @@ int main()
                             {
                                 // stop ufo sound
                                 alienSound.stop();
+                                Game::NumUfos -= 1;
                             }
 
                             // 'destroy' b
@@ -1031,8 +1169,8 @@ int main()
                 c.restart();
             }
 
-            // if 20 seconds has elapsed, spawn a ufo
-            if (time >= 15) {
+            // if 15 seconds has elapsed and there aren't any other ufos on screen, spawn a ufo
+            if (time >= 15 && Game::NumUfos == 0) {
                 time = 0;
                 Ufo *ufo = new Ufo();
                 ufo->settings(t8);
@@ -1040,6 +1178,15 @@ int main()
                 // start ufo sound
                 alienSound.setVolume(2*gunshot.getVolume());
                 alienSound.play();
+                Game::NumUfos += 1;
+                // if a heart wasn't sent this round, send heart
+                if (!Game::sentHeart)
+                {
+                    Heart *heart = new Heart();
+                    heart->settings(t9);
+                    entities.push_back(heart);
+                    Game::sentHeart = true;
+                }
             }
 
             // iterate through entities
@@ -1069,6 +1216,13 @@ int main()
                     i = entities.erase(i);
                     // delete the entity pointer and free memory
                     delete e;
+
+                    // check if ufo was deleted
+                    if (e->name == "ufo")
+                    {
+                        Game::NumUfos -= 1;
+                    }
+
                 }
                     // increment iterator
                 else i++;
@@ -1116,7 +1270,7 @@ int main()
             std::string lt = "Lives: "+std::to_string(player::lives);
             sf::Text livesText(lt, font);
             livesText.setOutlineThickness(10);
-            livesText.setPosition(700, 0);
+            livesText.setPosition(725, 0);
             livesText.setFillColor(sf::Color::Red);
             app.draw(livesText);
 
@@ -1133,6 +1287,8 @@ int main()
             // game over screen
         else
         {
+            Game::sentHeart = false;
+            Game::NumUfos = 0;
             // update high score
             if (Game::highScore < Game::currentScore)
             {
@@ -1152,20 +1308,20 @@ int main()
             {
                 endtxt =
                         "LEVEL COMPLETE\n"
-                        "Final Score: " +std::to_string(Game::currentScore)+"\n"
-                                                                            "High Score : "+std::to_string(Game::highScore)+"\n";
+                        " Final Score: " +std::to_string(Game::currentScore)+"\n"
+                                                                             " High Score : "+std::to_string(Game::highScore)+"\n";
 
             }
             else
             {
                 endtxt =
-                        "  GAME OVER\n"
+                        "   GAME OVER\n"
                         "Final Score: " +std::to_string(Game::currentScore)+"\n"
                                                                             "High Score : "+std::to_string(Game::highScore)+"\n";
             }
 
             sf::Text endText(endtxt, font);
-            endText.setPosition(((W-size.x)/2)+10, 180);
+            endText.setPosition(((W-size.x)/2)-5, 180);
             endText.setFillColor(sf::Color::Green);
             endText.setOutlineThickness(10);
             app.draw(endText);
@@ -1208,7 +1364,7 @@ int main()
                     {
                         // restart game, reset current score, lives, level
                         play = true;
-                        player::lives = MAX_LIVES;
+                        player::lives = START_LIVES;
                         Game::currentScore = 0;
                         Game::level = 1;
                         newLevel = true;
@@ -1226,7 +1382,7 @@ int main()
                         // restart game, increment level, reset lives, KEEP SCORE
                         play = true;
                         Game::level += 1;
-                        player::lives = MAX_LIVES;
+                        player::lives = START_LIVES;
                         Game::rounds += 1;
                         newLevel = true;
                         Game::round = 1;
