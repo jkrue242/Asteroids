@@ -1,7 +1,5 @@
 //=======================================
-// Name: Joseph Krueger
-// Date: 11/09/22
-// Homework 7 - Asteroids - CIE
+// Homework 7 - Asteroids
 // NOTE: UFOs display at intervals of 15 seconds
 
 // Extra Credit Additions:
